@@ -20,29 +20,19 @@ jobs:
         key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
         restore-keys: |
           ${{ runner.os }}-maven-
-    - name: mvn test
-      run: |
-        set -e
-        ./mvnw -V test
-    - name: mvn package
-      if: github.ref == 'refs/heads/master'
-      run: |
-        set -e
-        ./mvnw -V package -Dmaven.test.skip=true
-    - name: pack build
+    - name: mvn spring-boot:build-image
       if: github.ref == 'refs/heads/master'
       env:
-        PACK_VERSION: 0.11.0
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        DOCKER_REGISTRY: ${{ secrets.DOCKER_REGISTRY }}
+        IMAGE_NAME: ghcr.io/making/vanilla-gateway
       run: |
         set -e
-        docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
-        wget -q https://github.com/buildpacks/pack/releases/download/v${PACK_VERSION}/pack-v${PACK_VERSION}-linux.tgz
-        tar xzf pack-*.tgz
-        rm -f pack-*.tgz
-        ./pack build making/vanilla-gateway \
-          -p target/vanilla-gateway-*.jar  \
-          --builder gcr.io/paketo-buildpacks/builder:base
-
-        docker push making/vanilla-gateway
+        docker login ${DOCKER_REGISTRY} -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
+        BOOT_VERSION=$(grep '<version>' pom.xml | head -n 1 | sed -e 's|<version>||g' -e 's|</version>||g' -e 's|<.*>||g' -e 's| ||g')
+        set +e
+        docker pull ${IMAGE_NAME}
+        set -e
+        ./mvnw -V spring-boot:build-image -f cart-api/pom.xml -Dspring-boot.build-image.imageName=${IMAGE_NAME} -Dspring-boot.version=${BOOT_VERSION} -Dmaven.test.skip=true
+        docker push ${IMAGE_NAME}
