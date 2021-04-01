@@ -2,8 +2,8 @@ package lol.maki.gateway.accesslog;
 
 import java.util.Objects;
 
-import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.TraceContext;
+import brave.Span;
+import brave.propagation.TraceContext;
 
 public class AccessLog {
 	private String date;
@@ -134,8 +134,8 @@ public class AccessLog {
 				this.address,
 				Objects.toString(xForwardedFor, "-"),
 				Objects.toString(xForwardedProto, "-"),
-				this.elapsed / 1000.0, context.traceId(),
-				context.spanId(),
-				Objects.toString(context.parentId(), "-"));
+				this.elapsed / 1000.0, context.traceIdString(),
+				context.spanIdString(),
+				Objects.toString(context.parentIdString(), "-"));
 	}
 }
