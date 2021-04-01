@@ -80,6 +80,7 @@ public class AccessLogGatewayFilterFactory extends AbstractGatewayFilterFactory<
 							span.tag("referer", referer);
 						}
 						span.tag("user-agent", userAgent);
+						span.tag("status.code", String.valueOf(code));
 						log.info("{}", accessLog.goRouterCompliant(xForwardedFor, xForwardedProto, span));
 					});
 		}
