@@ -1,12 +1,14 @@
 package lol.maki.gateway.accesslog;
 
+import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.Objects;
 
 import brave.Span;
 import brave.propagation.TraceContext;
 
 public class AccessLog {
-	private String date;
+	private OffsetDateTime date;
 
 	private String method;
 
@@ -18,15 +20,17 @@ public class AccessLog {
 
 	private String address;
 
-	private long elapsed;
+	private double elapsed;
 
 	private String userAgent;
 
 	private String referer;
 
-	public AccessLog(String date, String method, String path, int status, String host,
-			String address, long elapsed, String userAgent,
-			String referer) {
+	private String contentType;
+
+	public AccessLog(OffsetDateTime date, String method, String path, int status, String host,
+			String address, double elapsed, String userAgent,
+			String referer, String contentType) {
 		this.date = date;
 		this.method = method;
 		this.path = path;
@@ -36,16 +40,17 @@ public class AccessLog {
 		this.elapsed = elapsed;
 		this.userAgent = userAgent;
 		this.referer = referer;
+		this.contentType = contentType;
 	}
 
 	public AccessLog() {
 	}
 
-	public String getDate() {
+	public OffsetDateTime getDate() {
 		return date;
 	}
 
-	public void setDate(String date) {
+	public void setDate(OffsetDateTime date) {
 		this.date = date;
 	}
 
@@ -89,11 +94,11 @@ public class AccessLog {
 		this.address = address;
 	}
 
-	public long getElapsed() {
+	public double getElapsed() {
 		return elapsed;
 	}
 
-	public void setElapsed(long elapsed) {
+	public void setElapsed(double elapsed) {
 		this.elapsed = elapsed;
 	}
 
@@ -111,6 +116,14 @@ public class AccessLog {
 
 	public void setReferer(String referer) {
 		this.referer = referer;
+	}
+
+	public String getContentType() {
+		return contentType;
+	}
+
+	public void setContentType(String contentType) {
+		this.contentType = contentType;
 	}
 
 	@Override
@@ -137,5 +150,47 @@ public class AccessLog {
 				this.elapsed / 1000.0, context.traceIdString(),
 				context.spanIdString(),
 				Objects.toString(context.parentIdString(), "-"));
+	}
+
+	public String caddyCompliantLog() {
+		return String.format("{"
+						+ "\"ts\":%.3f,"
+						+ "\"request\":{"
+						+ "\"remote_addr\":\"%s\","
+						+ "\"proto\":\"%s\","
+						+ "\"method\":\"%s\","
+						+ "\"host\":\"%s\","
+						+ "\"uri\":\"%s\","
+						+ "\"headers\":{"
+						+ "\"User-Agent\":["
+						+ "\"%s\""
+						+ "],"
+						+ "\"Referer\":["
+						+ "\"%s\""
+						+ "]"
+						+ "}"
+						+ "},"
+						+ "\"duration\":%s,"
+						+ "\"size\":%d,"
+						+ "\"status\":%d,"
+						+ "\"resp_headers\":{"
+						+ "\"Content-Type\":["
+						+ "\"%s\""
+						+ "]"
+						+ "}"
+						+ "}",
+				Instant.now().toEpochMilli() / 1000.0,
+				address,
+				"HTTP/1.1" /* TODO */,
+				method,
+				host,
+				path,
+				userAgent,
+				referer,
+				elapsed,
+				0 /* TODO */,
+				status,
+				contentType
+		);
 	}
 }

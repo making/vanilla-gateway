@@ -1,12 +1,14 @@
 package lol.maki.gateway.accesslog;
 
+import java.time.OffsetDateTime;
+
 public class AccessLogBuilder {
 
 	private String address;
 
-	private String date;
+	private OffsetDateTime date;
 
-	private long elapsed;
+	private double elapsed;
 
 	private String host;
 
@@ -20,9 +22,11 @@ public class AccessLogBuilder {
 
 	private String userAgent;
 
+	private String contentType;
+
 	public AccessLog build() {
 		return new AccessLog(date, method, path, status, host, address, elapsed,
-				userAgent, referer);
+				userAgent, referer, contentType);
 	}
 
 	public AccessLogBuilder setAddress(String address) {
@@ -30,12 +34,12 @@ public class AccessLogBuilder {
 		return this;
 	}
 
-	public AccessLogBuilder setDate(String date) {
+	public AccessLogBuilder setDate(OffsetDateTime date) {
 		this.date = date;
 		return this;
 	}
 
-	public AccessLogBuilder setElapsed(long elapsed) {
+	public AccessLogBuilder setElapsed(double elapsed) {
 		this.elapsed = elapsed;
 		return this;
 	}
@@ -67,6 +71,11 @@ public class AccessLogBuilder {
 
 	public AccessLogBuilder setUserAgent(String userAgent) {
 		this.userAgent = userAgent;
+		return this;
+	}
+
+	public AccessLogBuilder setContentType(String contentType) {
+		this.contentType = contentType;
 		return this;
 	}
 }

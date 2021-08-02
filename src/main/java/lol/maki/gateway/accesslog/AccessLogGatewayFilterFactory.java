@@ -16,25 +16,27 @@ import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFac
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.server.RequestPath;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 
-import static org.springframework.http.HttpHeaders.REFERER;
-
 @Component
 public class AccessLogGatewayFilterFactory extends AbstractGatewayFilterFactory<Object> {
 	private final Tracer tracer;
 
-	public AccessLogGatewayFilterFactory(Tracer tracer) {
+	private final AccessLogQueue logQueue;
+
+	public AccessLogGatewayFilterFactory(Tracer tracer, AccessLogQueue logQueue) {
 		this.tracer = tracer;
+		this.logQueue = logQueue;
 	}
 
 	@Override
 	public GatewayFilter apply(Object config) {
-		return new RequestLoggingGatewayFilter(tracer);
+		return new RequestLoggingGatewayFilter(tracer, logQueue);
 	}
 
 	static class RequestLoggingGatewayFilter implements GatewayFilter {
@@ -42,8 +44,11 @@ public class AccessLogGatewayFilterFactory extends AbstractGatewayFilterFactory<
 
 		private final Tracer tracer;
 
-		RequestLoggingGatewayFilter(Tracer tracer) {
+		private final AccessLogQueue logQueue;
+
+		RequestLoggingGatewayFilter(Tracer tracer, AccessLogQueue logQueue) {
 			this.tracer = tracer;
+			this.logQueue = logQueue;
 		}
 
 		@Override
@@ -51,7 +56,7 @@ public class AccessLogGatewayFilterFactory extends AbstractGatewayFilterFactory<
 			long begin = System.nanoTime();
 			return chain.filter(exchange) //
 					.doFinally(__ -> {
-						final long elapsed = (System.nanoTime() - begin) / 1_000_000;
+						final double elapsed = (System.nanoTime() - begin) / 1_000_000.0;
 						final ServerHttpRequest request = exchange.getRequest();
 						final ServerHttpResponse response = exchange.getResponse();
 						final OffsetDateTime now = OffsetDateTime.now();
@@ -61,16 +66,20 @@ public class AccessLogGatewayFilterFactory extends AbstractGatewayFilterFactory<
 						final int statusCode = code == null ? 0 : code.value();
 						final HttpHeaders headers = request.getHeaders();
 						final String host = headers.getHost().getHostString();
-						final String address = request.getRemoteAddress().getHostString();
+						final String remoteAddr = request.getRemoteAddress().getHostString() + ":" + request.getRemoteAddress().getPort();
 						final String userAgent = Objects.toString(headers.getFirst(HttpHeaders.USER_AGENT), "null");
-						final String referer = headers.getFirst(REFERER);
+						final String referer = headers.getFirst(HttpHeaders.REFERER);
+						final MediaType contentType = response.getHeaders().getContentType();
 						final AccessLog accessLog = new AccessLogBuilder()
-								.setDate(now.toString())
+								.setDate(now)
 								.setMethod(Objects.toString(method, ""))
 								.setPath(path.value()).setStatus(statusCode)
-								.setHost(host).setAddress(address).setElapsed(elapsed)
-								.setUserAgent(userAgent).setReferer(referer)
+								.setHost(host).setAddress(remoteAddr).setElapsed(elapsed)
+								.setUserAgent(userAgent)
+								.setReferer(Objects.toString(referer, "-"))
+								.setContentType(contentType == null ? "-" : contentType.toString())
 								.build();
+						this.logQueue.put(accessLog).subscribe();
 						final List<String> xForwardedFors = headers.get("X-Forwarded-For");
 						final String xForwardedFor = xForwardedFors == null ? null : String.join(", ", xForwardedFors);
 						final String xForwardedProto = headers.getFirst("X-Forwarded-Proto");
