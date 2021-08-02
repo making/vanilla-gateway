@@ -55,7 +55,7 @@ jobs:
         method: kubeconfig
         kubeconfig: ${{ secrets.KPACK_KUBECONFIG }}
     - name: build-image
-      if: github.ref == 'refs/heads/main'
+      if: github.ref == 'refs/heads/master'
       env:
         APP_NAME: vanilla-gateway
         GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.KPACK_GOOGLE_APPLICATION_CREDENTIALS }}
