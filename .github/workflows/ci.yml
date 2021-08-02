@@ -79,5 +79,5 @@ jobs:
           --git-revision ${GIT_REVISION} \
           --wait \
           --env BP_JVM_VERSION=11 \
-          --env BP_MAVEN_BUILD_ARGUMENTS="-Dmaven.test.skip=true -Dspring-boot.version=${BOOT_VERSION}"
+          --env BP_MAVEN_BUILD_ARGUMENTS="clean package -Dmaven.test.skip=true -Dspring-boot.version=${BOOT_VERSION}"
         ./kp build list -n categolj
