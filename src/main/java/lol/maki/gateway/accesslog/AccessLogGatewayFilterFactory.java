@@ -56,7 +56,7 @@ public class AccessLogGatewayFilterFactory extends AbstractGatewayFilterFactory<
 			long begin = System.nanoTime();
 			return chain.filter(exchange) //
 					.doFinally(__ -> {
-						final double elapsed = (System.nanoTime() - begin) / 1_000_000.0;
+						final double elapsed = ((double) System.nanoTime() - begin) / 1_000_000_000;
 						final ServerHttpRequest request = exchange.getRequest();
 						final ServerHttpResponse response = exchange.getResponse();
 						final OffsetDateTime now = OffsetDateTime.now();

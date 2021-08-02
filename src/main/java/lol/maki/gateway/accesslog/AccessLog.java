@@ -1,6 +1,5 @@
 package lol.maki.gateway.accesslog;
 
-import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.Objects;
 
@@ -147,7 +146,7 @@ public class AccessLog {
 				this.address,
 				Objects.toString(xForwardedFor, "-"),
 				Objects.toString(xForwardedProto, "-"),
-				this.elapsed / 1000.0, context.traceIdString(),
+				this.elapsed, context.traceIdString(),
 				context.spanIdString(),
 				Objects.toString(context.parentIdString(), "-"));
 	}
@@ -179,18 +178,18 @@ public class AccessLog {
 						+ "]"
 						+ "}"
 						+ "}",
-				Instant.now().toEpochMilli() / 1000.0,
-				address,
+				this.date.toInstant().toEpochMilli() / 1000.0,
+				this.address,
 				"HTTP/1.1" /* TODO */,
-				method,
-				host,
-				path,
-				userAgent,
-				referer,
-				elapsed,
+				this.method,
+				this.host,
+				this.path,
+				this.userAgent,
+				this.referer,
+				this.elapsed,
 				0 /* TODO */,
-				status,
-				contentType
+				this.status,
+				this.contentType
 		);
 	}
 }
