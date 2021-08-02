@@ -70,6 +70,9 @@ public class AccessLogGatewayFilterFactory extends AbstractGatewayFilterFactory<
 						final String userAgent = Objects.toString(headers.getFirst(HttpHeaders.USER_AGENT), "null");
 						final String referer = headers.getFirst(HttpHeaders.REFERER);
 						final MediaType contentType = response.getHeaders().getContentType();
+						if (userAgent.startsWith("Go-http-client")) {
+							return;
+						}
 						final AccessLog accessLog = new AccessLogBuilder()
 								.setDate(now)
 								.setMethod(Objects.toString(method, ""))
