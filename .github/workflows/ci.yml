@@ -63,7 +63,7 @@ jobs:
         DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
         DOCKER_REGISTRY: ${{ secrets.DOCKER_REGISTRY }}
         IMAGE_NAME: ghcr.io/making/vanilla-gateway
-        IMAGE_TAG: ${{ github.sha }}
+        GIT_REVISION: ${{ github.sha }}
       run: |
         set -e
         docker login ${DOCKER_REGISTRY} -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
@@ -74,7 +74,9 @@ jobs:
         export GOOGLE_APPLICATION_CREDENTIALS=$PWD/key.json
         ./kp image save ${APP_NAME} \
           -n categolj \
-          --tag ${IMAGE_NAME}:${IMAGE_TAG} \
+          --tag ${IMAGE_NAME} \
+          --git https://github.com/making/vanilla-gateway \
+          --git-revision ${GIT_REVISION} \
           --wait \
           --env BP_JVM_VERSION=11 \
           --env BP_MAVEN_BUILD_ARGUMENTS="-Dmaven.test.skip=true -Dspring-boot.version=${BOOT_VERSION}"
