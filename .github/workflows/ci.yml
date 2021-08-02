@@ -68,7 +68,9 @@ jobs:
         set -e
         docker login ${DOCKER_REGISTRY} -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
         BOOT_VERSION=$(grep '<version>' pom.xml | head -n 1 | sed -e 's|<version>||g' -e 's|</version>||g' -e 's|<.*>||g' -e 's| ||g' -e 's|	||g')
-        echo ${GOOGLE_APPLICATION_CREDENTIALS_JSON} | base64 -d > key.json
+        cat <<EOF > key.json
+        ${GOOGLE_APPLICATION_CREDENTIALS_JSON}
+        EOF
         export GOOGLE_APPLICATION_CREDENTIALS=$PWD/key.json
         ./kp image save ${APP_NAME} \
           -n categolj \
