@@ -1,6 +1,8 @@
 package lol.maki.gateway.dump;
 
 
+import java.util.TreeMap;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,8 +19,10 @@ public class RequestHeadersDumpGatewayFilterFactory
 	@Override
 	public GatewayFilter apply(Object config) {
 		return (exchange, chain) -> {
-			final ServerHttpRequest request = exchange.getRequest();
-			log.info("Request Headers: {}", request.getHeaders());
+			if (log.isInfoEnabled()) {
+				final ServerHttpRequest request = exchange.getRequest();
+				log.info("Request Headers:\t{}\t    {}\t{}", request.getMethod(),  request.getURI(), new TreeMap<>(request.getHeaders()));
+			}
 			return chain.filter(exchange);
 		};
 	}
