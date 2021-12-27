@@ -18,7 +18,8 @@
 		<java.version>11</java.version>
 		<spring-cloud.version>Hoxton.SR12</spring-cloud.version>
 		<netty.version>4.1.68.Final</netty.version>
-		<spring-framework.version>5.2.18.RELEASE</spring-framework.version>
+		<spring-framework.version>5.2.19.RELEASE</spring-framework.version>
+		<log4j2.version>2.17.0</log4j2.version>
 	</properties>
 
 	<dependencies>
